@@ -1,0 +1,161 @@
+---
+title: "HierMultinom Example Application"
+author: "Aaron J. Molstad and Keshav Motwani"
+date: "2023-05-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+In this document, we provide a short tutorial on how to use the $\texttt{HierMultinom}$ software in R. If you encounter any errors or strange behavior, please report the issue at https://github.com/ajmolstad/HierMultinom. 
+
+First, you need to set the path to where the R scripts and RDS files will be. Call this path $\texttt{dir}$. For example, 
+```{r, eval=FALSE}
+dir <- "/Users/amolstad/scRNAseq/Example/"
+```
+```{r, echo=FALSE}
+dir <- "/Users/aaron/Dropbox/HierMultinom/SoftwareExample/"
+library(Rcpp)
+library(MASS)
+sourceCpp(paste(dir, "Functions/matMult.cpp", sep=""))
+source(paste(dir, "Functions/HierMultinom.R", sep=""))
+```
+
+To begin, download the dataset $\texttt{pbmc3k_final.RDS}$ from this [Dropbox link](https://www.dropbox.com/s/kwd3kcxkmpzqg6w/pbmc3k_final.rds?dl=0). This is a PBMC single-cell RNA-seq dataset consisting of 2700 cells with labels. These data were already processed following the  [$\texttt{Seurat}$ tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html). 
+```{r getdata, message=FALSE}
+library(Seurat)
+pbmc <- readRDS(paste(dir, "pbmc3k_final.RDS", sep=""))
+# update to newer Seurat format
+pbmc <- UpdateSeuratObject(pbmc)
+```
+In this particular dataset, there are eight cell types.
+```{r cell types}
+table(pbmc@meta.data$ClusterNames_0.6)
+```
+We will create the expression matrix needed for our software. In the first step, we select the top five hundred most variable genes using the $\texttt{FindVariableFeatures}$ function from $\texttt{Seurat}$. 
+```{r a1, cache=TRUE}
+topGenes <- sort(FindVariableFeatures(pbmc[["RNA"]]@data)$vst.variance.standardized, decreasing=TRUE, index=TRUE)$ix[1:500]
+Xfull <- as.matrix(pbmc[["RNA"]]@data[topGenes,])
+```
+Then, we will divide the data into training, testing, and a validation set.  Note that our function takes the design matrix $X$ as an $n \times p$ matrix where $n$ is the number of samples (here, cells) and $p$ is the number of predictors (here, genes). Similarly, $Y$ needs to be a $n \times K$ matrix where $K$ is the number of response categories (here. cell type labels). Each row of $Y$ must be all zeros except one--in the column corresponding to that particular sample's label.
+```{r a2, cache=TRUE}
+set.seed(1)
+train.inds <- sample(1:dim(Xfull)[2], 1750)
+val.inds <- sample(c(1:dim(Xfull)[2])[-train.inds], 750)
+test.inds <- c(1:dim(Xfull)[2])[-c(train.inds, val.inds)]
+
+Yfull <- pbmc@meta.data$ClusterNames_0.6
+categories = sort(unique(Yfull))
+Yfull = t(sapply(Yfull, function(y) categories == y) * 1)
+colnames(Yfull) = categories
+
+Ytrain <- Yfull[train.inds,]
+Yval <- Yfull[val.inds,]
+Ytest <- Yfull[test.inds,]
+
+Xtrain <- t(Xfull[,train.inds])
+# remove any genes which do not vary
+rm.genes <- which(apply(Xtrain, 2, sd)==0)
+if(length(rm.genes) > 0){
+  Xtrain <- Xtrain[,-rm.genes]
+  Xval <- t(Xfull[-rm.genes,val.inds])
+  Xtest <- t(Xfull[-rm.genes,test.inds])
+} else {
+  Xval <- t(Xfull[,val.inds])
+  Xtest <- t(Xfull[,test.inds])
+}
+```
+To keep matters simple, we will use only two coarse categories: we will define T cells = $\{$CD4 T cells, CD8 T cells$\}$ and will define Monocytes = $\{$CD14+ Monocytes, FCGR3A+ Monocytes$\}$.
+
+## Nonoverlapping coarse categories
+To define coarse categories with our method is straightforward. We need only construct a list named $\texttt{groups}$ where each element of this list contains the set of categories comprising the coarse category. We must then convert this to numeric values to match the columns of $Y$. 
+```{r, cache=TRUE}
+groups <- list(
+  c("CD4 T cells", "CD8 T cells"), 
+  c("FCGR3A+ Monocytes", "CD14+ Monocytes"))
+groups <- lapply(groups, function(group) sapply(group, function(x) which(categories == x)))
+```
+Now we are ready to fit the model using the function $\texttt{HeirMult.Path}$. Note that this function only works when no coarse categories overlap. By definition, an overlap occurs when a fine category is contained in two or more coarse categories. This function fits the model for a grid of candidate tuning parameters. Note that this function will take a few minutes to run (~3 minutes). 
+```{r, cache=TRUE}
+# install.packages("devtools")
+# library(devtools)
+# devtools::install_github("ajmolstad/HierMultinom")
+library(HierMultinom)
+mod.fit <- HierMultinom.path(X = Xtrain, Y = Ytrain, groups = groups, 
+  	ngamma = 20, delta = 1e-4, tol = 1e-7,
+  	lambda.vec = 10^seq(-5,-1, length=5), 
+  	max.iter = 1e4,
+  	Xval = Xval, Yval = Yval, quiet=FALSE)
+```
+The arguments are
+\begin{itemize}
+\item $\texttt{X}$: An $n \times p$ design matrix. Do not include a column for an intercept: this is added later. 
+\item $\texttt{Y}$: An $n \times K$ matrix of response categories as described above.
+\item $\texttt{groups}$: The list of groups, as described above. 
+\item $\texttt{ngamma}$: Number of candidate $\gamma$ tuning parameter values.
+\item $\texttt{delta}$: The ratio of maximum to minimum candidate $\gamma$ values. Check validation errors: if still decreasing at smallest $\gamma$ value, decrease $\texttt{delta}$ and rerun. 
+\item $\texttt{tol}$: Convergence tolerance. The default $10^{-7}$ is stringent. 
+\item $\texttt{lambda.vec}$: Candidate $\lambda$ tuning parameter values. Default is $10^{-3, \dots, 0}$. 
+\item $\texttt{max.iter}$: Maximum number of iterations for accelerated proximal gradient descent algorithm. 
+\item $\texttt{Xval}$: An $n_{\rm validation} \times p$ matrix of predictors for validation set. 
+\item $\texttt{Yval}$: An $n_{\rm validation} \times K$ matrix of responses for validation set. 
+\item $texttt{quiet}$: Should validation errors be printed as they are computed?
+\end{itemize}
+  
+With our fitted model object, we can then look at the validation errors, extract coefficients, 
+and predict. Validation errors are saved as $\texttt{val.errs}$. 
+```{r, cache=TRUE}
+str(mod.fit)
+```
+For prediction, one can use $\texttt{HierMult.predict}$. Here, let us look at the confusion matrix. 
+
+```{r, cache=TRUE}
+out.preds <- HierMultinom.predict(mod.fit, Xtest)
+str(out.preds)
+sum(out.preds$preds == apply(Ytest, 1, which.max))/dim(Ytest)[1]
+tmp <- data.frame("preds" = categories[out.preds$preds],  "truth" = categories[apply(Ytest, 1, which.max)])
+tab <- table(tmp$preds, tmp$truth)
+colnames(tab) <- 1:8
+tab
+```
+Classification accuracy on the testing set is quite high here.  Now, let us extract the estimated regression coefficients on the original $X$ scale. This can be done with  $\texttt{HierMult.coef}$
+```{r, cache=TRUE}
+out.coefs <- HierMultinom.coef(mod.fit)
+str(out.coefs)
+``` 
+
+### Overlapping coarse categories
+A different function must be used when the coarse categories overlap. Consider the case that we wanted another category: lymphocytes, which consists of the T cells and the B cells. 
+```{r, cache=TRUE}
+groups <- list(
+  c("CD4 T cells", "CD8 T cells"),  # T cells
+  c("FCGR3A+ Monocytes", "CD14+ Monocytes"), # monocytes
+   c("CD4 T cells", "CD8 T cells", "B cells")) # lymphocytes
+groups <- lapply(groups, function(group) sapply(group, function(x) which(categories == x)))
+```
+Using the same inputs, we now need only use the function $\texttt{HeirMultinomOverlap.Path}$. This function is somewhat slower than that for nonoverlapping coarse categories, so again, please be patient when using this software. 
+```{r, echo=FALSE}
+library(Rcpp)
+library(MASS)
+sourceCpp(paste(dir, "Functions/matMult.cpp", sep=""))
+source(paste(dir, "Functions/HierMultinom.R", sep=""))
+```
+
+```{r overlap, cache=TRUE}
+mod.fit.overlap <- HierMultinomOverlap.path(X = Xtrain, Y = Ytrain, groups = groups, 
+  	ngamma = 20, delta = 1e-4, tol = 1e-7,
+  	lambda.vec = 10^seq(-5,-1, length=5), 
+  	max.iter = 1e4,
+  	Xval = Xval, Yval = Yval, quiet=FALSE)
+```
+We can use the fitted model object in the exact same way before. Let us quickly check the prediction under the new grouping structure. 
+```{r}
+out.preds.overlap <- HierMultinom.predict(mod.fit.overlap, Xtest)
+sum(out.preds.overlap$preds == apply(Ytest, 1, which.max))/dim(Ytest)[1]
+tmp <- data.frame("preds" = categories[out.preds.overlap$preds],  "truth" = categories[apply(Ytest, 1, which.max)])
+tab <- table(tmp$preds, tmp$truth)
+colnames(tab) <- 1:8
+tab
+```
+Here, we see the classification accuracy is even higher, with one NK that was misclassified before correctly classified now. 

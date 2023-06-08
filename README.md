@@ -9,7 +9,7 @@ library(devtools)
 devtools::install_github("ajmolstad/HierMultinom")
 ```
 # Citation instructions
-Please cite the most recent version of the article mentioned above. 
+Please cite the most recent version of the article mentioned above. As of June, 2023, this was the following (in bibtex). 
 ```
 @misc{molstad2022multiresolution,
       title={Multiresolution categorical regression for interpretable cell type annotation}, 
