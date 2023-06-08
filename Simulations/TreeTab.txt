@@ -1,0 +1,12 @@
+A	X1
+A	X2
+A	X3
+B	X4
+B	X5
+B	X6
+C	X7
+C	X8
+C	X9
+D	X10
+D	X11
+D	X12

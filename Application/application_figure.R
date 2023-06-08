@@ -1,8 +1,8 @@
-RESULT_PATH = "results/application_Multires_Group_L1"
+RESULT_PATH = "results/"
 FIGURES_PATH = file.path(RESULT_PATH, "figures/")
 dir.create(FIGURES_PATH, recursive = TRUE)
 
-model = readRDS(file.path(RESULT_PATH, "real_data_application_n_genes_2000_Multires_1.rds"))
+Beta = readRDS(file.path(RESULT_PATH, "mrMLR.RDS"))
 
 Beta = model$Beta_hat
 rownames(Beta) = read.csv("data/genes.csv")[1:model$parameters$n_genes, 2]
@@ -37,17 +37,11 @@ categories = c("B intermediate", "B memory", "B naive", "Plasmablast", "CD14 Mon
 Beta = Beta[rowSums(abs(Beta)) != 0, ]
 
 for (i in 1:nrow(Beta)) {
-
   for (g in names(groups)) {
-
     if (isTRUE(all.equal(Beta[i, groups[[g]]], setNames(rep(Beta[i, groups[[g]][1]], length(Beta[i, groups[[g]]])), nm = names(Beta[i, groups[[g]]])))) & all(!(Beta[i, groups[[g]]] %in% names(groups)))) {
-
       Beta[i, groups[[g]]] = as.numeric(g)
-
     }
-
   }
-
 }
 
 Beta[!(Beta %in% names(groups))] = 0

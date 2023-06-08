@@ -1,8 +1,13 @@
 # -------------------------------------------
 # Generate data function
 # -------------------------------------------
+
 if(Model == 1){
   beta <- matrix(0, nrow=p, K)
+  # coarse.inds <- sample(1:p, 6)
+  # for(kk in 1:4){
+  #   beta[coarse.inds, groups[[kk]]] <- rnorm(length(coarse.inds), sd = 2)%*%t(rep(1, length(groups[[kk]])))
+  # }
   fine.inds <- sample(1:p, 18)
   for(kk in 1:4){
     for(ll in 1:length(fine.inds)){

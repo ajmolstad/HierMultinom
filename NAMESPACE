@@ -1,0 +1,12 @@
+useDynLib(HierMultinom, .registration = TRUE)
+
+export(HierMultinom.path)
+export(HierMultinomOverlap.path)
+export(HierMultinom.predict)
+export(HierMultinom.coef)
+
+import(Rcpp)
+import(Matrix)
+
+importFrom("stats",  "sd", "var")
+importFrom("MASS",  "ginv")

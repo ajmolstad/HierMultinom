@@ -3,6 +3,14 @@
 # -------------------------------------------
 if(Model == 1){
   beta <- matrix(0, nrow=p, K)
+  # coarse.inds <- sample(1:p, 3)
+  # for(kk in 1:3){
+  #   t0 <- rnorm(length(coarse.inds), sd = 2)
+  #   beta[coarse.inds, groups[[kk]]] <- t0%*%t(rep(1, length(groups[[kk]])))
+  # }
+  # for(kk in 5){
+  #   beta[coarse.inds, groups[[kk]]] <- rnorm(length(coarse.inds*groups[[kk]]), sd = 2)
+  # }
   fine.inds <- sample(1:p, 18)
   for(kk in c(1:2, 4:5)){
     for(ll in 1:length(fine.inds)){
