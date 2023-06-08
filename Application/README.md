@@ -1,6 +1,4 @@
-----------------------------------------
 # Reproduce scRNA-seq analyses
------------------------------------------
 
 **Note.** Please direct any questions to amolstad@umn.edu. 
 
