@@ -244,7 +244,6 @@ rf.oracle <- NULL
 # HeiRFIT
 # ------------------------------
 TreeTab <- read.delim("~/blue/HierMultinom/Simulations_R1/TreeTab.txt", header=F)
-# withr::with_libpaths("~/blue/HierMultinom/Simulations_R1/packages/", devtools::install_github("yasinkaymaz/HieRFIT"))
 library(HieRFIT, lib.loc="~/blue/HierMultinom/Simulations_R1/packages/")
 
 Yfac <- as.character(apply(Y, 1, function(x){which(x==1)}))
@@ -272,7 +271,7 @@ Results <- append(Results, list("HeirFIT.classErr" = HeirFIT.classification.erro
 
 
 # --------------------------------------------------------
-# Our method with only multires penalty
+# Our method with only Multiresolution penalty
 # ---------------------------------------------------------
 sourceCpp("~/blue/HierMultinom/Simulations_R1/Functions/matMult.cpp")
 source("~/blue/HierMultinom/Simulations_R1/Functions/HierMultinomOverlapZero.R")
@@ -285,7 +284,7 @@ Results  <- append(Results, getResults(Ytest, Xtest, beta, prob.est, "OursOracle
 
 
 # --------------------------------------------------------------------
-# Our method
+# Our method 
 # --------------------------------------------------------------------
 ptm <- proc.time()
 t0 <- HeirMultinom.path(X, Y, groups, ngamma = 100, delta = 0.005, lambda.vec = 10^seq(-5,-1, length=10), tol = 1e-9, max.iter = 1000, Xval, Yval)
@@ -305,7 +304,7 @@ Results <- append(Results, list("beta" = beta, "beta.est" = beta.est, "beta.glmn
   "comp.time" = comp.time))
 
 # --------------------------------------------------------------------
-# Our method with lower tolerance
+# Our method with relaxed convergence tolerance
 # --------------------------------------------------------------------
 ptm <- proc.time()
 t0 <- HeirMultinom.path(X, Y, groups, ngamma = 100, delta = 0.005, lambda.vec = 10^seq(-5,-1, length=10), tol = 1e-7, max.iter = 1000, Xval, Yval)
@@ -319,7 +318,7 @@ Results <- append(Results, list("comp.time.e7" = comp.time.e7, "beta.est.e7" = M
 
 
 # --------------------------------------------------------------------
-# Our method with even lower tolerance
+# Our method with more relaxed convergence tolerance
 # --------------------------------------------------------------------
 ptm <- proc.time()
 t0 <- HeirMultinom.path(X, Y, groups, ngamma = 100, delta = 0.005, lambda.vec = 10^seq(-5,-1, length=10), tol = 1e-5, max.iter = 1000, Xval, Yval)
@@ -334,3 +333,4 @@ Results <- append(Results, list("comp.time.e5" = comp.time.e5, "beta.est.e5" = M
 
 
 saveRDS(Results, file=savename)
+q("no")

@@ -4,6 +4,7 @@
 uu <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
 set.seed(uu)
 library(glmnet)
+library(Matrix)
 library(HierMultinom) 
 nreps <- 100
 t0 <- expand.grid(p = rep(c(100, 200, 500, 1000), each=nreps),
@@ -309,7 +310,6 @@ rf.oracle <- NULL
 # Hierarchical random forests 
 # --------------------------------
 TreeTab <- read.delim("~/blue/HierMultinom/Simulations_R1/TreeTabOverlap.txt", header=F)
-# withr::with_libpaths("~/blue/HierMultinom/Simulations_R1/packages/", devtools::install_github("yasinkaymaz/HieRFIT"))
 library(HieRFIT, lib.loc="~/blue/HierMultinom/Simulations_R1/packages/")
 
 Yfac <- as.character(apply(Y, 1, function(x){which(x==1)}))
@@ -338,7 +338,7 @@ Results <- append(Results, list("HeirFIT.classErr" = HeirFIT.classification.erro
 refmod <- NULL
 
 # --------------------------------------------------------
-# Our method with only multires penalty
+# Our method with only multiresolution penalty
 # ---------------------------------------------------------
 sourceCpp("~/blue/HierMultinom/Simulations_R1/Functions/matMult.cpp")
 source("~/blue/HierMultinom/Simulations_R1/Functions/HierMultinomOverlapZero.R")
@@ -353,7 +353,7 @@ Results  <- append(Results, getResults(Ytest, Xtest, beta, prob.est, "OursOracle
 
 
 # --------------------------------------------------------------------
-# For fixed lambda, need to workout lambda yielding complete sparsity
+# Our method
 # --------------------------------------------------------------------
 groups.input <- list(1:6, 7:9, 10:12, 4:6, 1:3)
 ptm <- proc.time()
@@ -372,10 +372,9 @@ l0 <- XtestInput%*%beta.est
 prob.est <- exp(l0 - apply(l0, 1, max))/rowSums(exp(l0 - apply(l0, 1, max)))
 Results  <- append(Results, getResults(Ytest, Xtest, beta, prob.est, "Ours"))
 
-# --------------------------------------
-# lower tolerance
-# ---------------------------------------
-library(Matrix)
+# -----------------------------------------------
+# Our method with relaxed convergence tolerance
+# -----------------------------------------------
 Results <- append(Results, list("beta" = beta, "beta.est" = beta.est, "beta.glmnet" = beta.glmnet, "theta.msda" = theta.msda,
   "comp.time" = comp.time, "comp.time.hrf" = comp.time.hrf))
 
@@ -398,10 +397,9 @@ Results  <- append(Results, getResults(Ytest, Xtest, beta, prob.est, "Ours.e7"))
 Results <- append(Results, list("comp.time.e7" = comp.time.e7, "beta.est.e7" = Matrix(beta.est, sparse=TRUE)))
 
 
-# --------------------------------------
-# even lower tolerance
-# ---------------------------------------
-library(Matrix)
+# -----------------------------------------------
+# Our method with more relaxed convergence tolerance
+# -----------------------------------------------
 Results <- append(Results, list("beta" = beta, "beta.est" = beta.est, "beta.glmnet" = beta.glmnet, "theta.msda" = theta.msda,
   "comp.time" = comp.time, "comp.time.hrf" = comp.time.hrf))
 
