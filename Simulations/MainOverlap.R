@@ -378,7 +378,6 @@ Results  <- append(Results, getResults(Ytest, Xtest, beta, prob.est, "Ours"))
 Results <- append(Results, list("beta" = beta, "beta.est" = beta.est, "beta.glmnet" = beta.glmnet, "theta.msda" = theta.msda,
   "comp.time" = comp.time, "comp.time.hrf" = comp.time.hrf))
 
-
 ptm <- proc.time()
 t0 <- HierMultinomOverlap.path(X, Y, groups.input, ngamma = 50, delta = 0.01, 
                                  lambda.vec = 10^seq(-5,-1, length=10), tol = 1e-7, 

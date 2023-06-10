@@ -289,7 +289,6 @@ Results  <- append(Results, getResults(Ytest, Xtest, beta, prob.est, "OursOracle
 ptm <- proc.time()
 t0 <- HeirMultinom.path(X, Y, groups, ngamma = 100, delta = 0.005, lambda.vec = 10^seq(-5,-1, length=10), tol = 1e-9, max.iter = 1000, Xval, Yval)
 comp.time <- proc.time() - ptm
-
 beta.est <- t0$beta.est
 XtestInput <- cbind(1, (Xtest - rep(1, dim(Xtest)[1])%*%t(apply(X, 2, mean)))/(rep(1, dim(Xtest)[1])%*%t(apply(X, 2, sd))))
 l0 <- exp(XtestInput%*%beta.est)

@@ -167,7 +167,7 @@ AccPGD.HierMult <- function(X, Y, groups, beta.init,
     
     obj.vals[kk+1] <- lik.try + evalPen(beta.iter, lambda, gamma, groups)
     if (kk > 10) {
-      if (all(abs(obj.vals[kk:(kk-5)] - obj.vals[(kk+1):(kk-4)]) < tol * abs(obj.vals[1]))) {
+      if (all(abs(obj.vals[kk:(kk-3)] - obj.vals[(kk+1):(kk-2)]) < tol * abs(obj.vals[1]))) {
         break
       }
       if (kk > max.iter) {
@@ -561,6 +561,9 @@ HierMultinomOverlap.path <- function(X, Y, groups, ngamma = 100, delta = 0.01, l
   ind1 <- which(val.errs == min(val.errs), arr.ind=TRUE)[1,1]
   ind2 <- which(val.errs == min(val.errs), arr.ind=TRUE)[1,2]
 
-  return(list("beta.est" = beta.array[,,ind1,ind2], "val.errs" = val.errs, "beta.array" = beta.array, 
-    "X.train.mean" = apply(X, 2, mean), "X.train.sd" = apply(X, 2, sd)))
+  return(list("beta.est" = beta.array[,,ind1,ind2], 
+    "val.errs" = val.errs, 
+    "beta.array" = beta.array, 
+    "X.train.mean" = apply(X, 2, mean), 
+    "X.train.sd" = apply(X, 2, sd)))
 }
