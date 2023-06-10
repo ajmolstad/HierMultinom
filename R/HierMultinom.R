@@ -123,7 +123,8 @@ validationLik <- function(X, Xval, Yval, beta){
 # ---------------------------------------------------------------
 # Minimize objective function for one pair of tuning parameters
 # --------------------------------------------------------------
-AccPGD.HierMult <- function(X, Y, groups, beta.init, lambda, gamma, max.iter = 1e4, tol = 1e-9){
+AccPGD.HierMult <- function(X, Y, groups, beta.init, 
+      lambda, gamma, max.iter = 1e4, tol = 1e-9){
   
   obj.vals <- rep(Inf, max.iter)
   obj.vals[1] <- getObj(X, Y, beta.init, groups, lambda, gamma)
@@ -166,7 +167,7 @@ AccPGD.HierMult <- function(X, Y, groups, beta.init, lambda, gamma, max.iter = 1
     
     obj.vals[kk+1] <- lik.try + evalPen(beta.iter, lambda, gamma, groups)
     if (kk > 10) {
-      if (all(abs(obj.vals[kk:(kk-3)] - obj.vals[(kk+1):(kk-2)]) < tol * abs(obj.vals[1]))) {
+      if (all(abs(obj.vals[kk:(kk-5)] - obj.vals[(kk+1):(kk-4)]) < tol * abs(obj.vals[1]))) {
         break
       }
       if (kk > max.iter) {
@@ -249,7 +250,9 @@ HierMultinom.path <- function(X, Y, groups, ngamma = 100, delta = 0.01,
       beta.init <- temp
     }
     if (kk > 3) {
-      if (all(val.errs[kk,] > min(val.errs[kk-1,])) & all(val.errs[kk-1,] > min(val.errs[kk-2,])) & all(val.errs[kk-2,] > min(val.errs[kk-3,]))) {
+      if (all(val.errs[kk,] > min(val.errs[kk-1,])) & 
+          all(val.errs[kk-1,] > min(val.errs[kk-2,])) & 
+          all(val.errs[kk-2,] > min(val.errs[kk-3,]))) {
         break
       }
     }
@@ -257,6 +260,7 @@ HierMultinom.path <- function(X, Y, groups, ngamma = 100, delta = 0.01,
   
   ind1 <- which(val.errs == min(val.errs), arr.ind=TRUE)[1,1]
   ind2 <- which(val.errs == min(val.errs), arr.ind=TRUE)[1,2]
+
   return(list("beta.est" = beta.array[,,ind1,ind2], 
     "beta.array" = beta.array, 
     "val.errs" = val.errs,
@@ -268,13 +272,13 @@ HierMultinom.path <- function(X, Y, groups, ngamma = 100, delta = 0.01,
 
 HierMultinom.predict <- function(mod.fit, Xtest, ind1 = NULL, ind2 = NULL){
 
-  if(is.null(ind1)){
+  if (is.null(ind1)) {
     beta.est <- mod.fit$beta.est
   } else {
     beta.est <- mod.fit$beta.array[,,,ind1, ind2]
   }
   XtestInput <- cbind(1, (Xtest - rep(1, dim(Xtest)[1])%*%t(mod.fit$X.train.mean))/(rep(1, dim(Xtest)[1])%*%t(mod.fit$X.train.sd)))
-  if(any(mod.fit$X.train.sd==0)){
+  if (any(mod.fit$X.train.sd==0)) {
     XtestInput[,which(mod.fit$X.train.sd==0)] <- 0
   }
   l0 <- XtestInput%*%beta.est
@@ -286,7 +290,7 @@ HierMultinom.predict <- function(mod.fit, Xtest, ind1 = NULL, ind2 = NULL){
 
 HierMultinom.coef <- function(mod.fit, ind1 = NULL, ind2 = NULL){
 
-  if(is.null(ind1)){
+  if (is.null(ind1)) {
     beta.est <- mod.fit$beta.est
   } else {
     beta.est <- mod.fit$beta.array[,,,ind1, ind2]
@@ -322,7 +326,7 @@ HierMultinom.coef <- function(mod.fit, ind1 = NULL, ind2 = NULL){
 
 proxFunction.overlap <- function(eta, lambda, groups, D.input, vmat = NULL){
 
-  if(is.null(vmat)){
+  if (is.null(vmat)) {
     vmat <- matrix(0, length(eta), length(groups))
   }
   D.mats <- list()
@@ -336,42 +340,32 @@ proxFunction.overlap <- function(eta, lambda, groups, D.input, vmat = NULL){
   }
 
   y.resid <- eta
-  for(kk in length(groups):1){
+  for (kk in length(groups):1) {
     y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] - crossprod(D.mats[[kk]], vmat[groups[[kk]], kk])
   }
 
-  for(jj in 1:1e4){
-    
+  for (jj in 1:1e4) {
     vmatold <- vmat
-    for(kk in length(groups):1){
+    for (kk in length(groups):1) {
       y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] + crossprod(D.mats[[kk]], vmat[groups[[kk]], kk])
       vmat[groups[[kk]],kk] <- crossprod(ginvs[[kk]], crossprod(D.mats[[kk]], y.resid[groups[[kk]]]))
-      if(sum(vmat[groups[[kk]],kk]^2) < lambda^2){
+      if (sum(vmat[groups[[kk]],kk]^2) < lambda^2) {
         y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] - crossprod(D.mats[[kk]],vmat[groups[[kk]], kk])
-        #cat("passed", "\n")
       } else {
         w <- crossprod(y.resid[groups[[kk]]], eo[[kk]]$vec[,which(abs(eo[[kk]]$values) > 1e-8)])
         t0 <- sum(w^2)
         tau <- sqrt(t0/lambda^2) - 1 
-        #cat("# ------------------", "\n")
-        #tryFunc <- function(x){c(crossprod(solve(crossprod(D.mats[[kk]]) + diag(x, dim(D.mats[[kk]])[1]), crossprod(D.mats[[kk]], y.resid[groups[[kk]]])))) - lambda^2}
-        #out <- uniroot(tryFunc, c(1e-12,1e12), tol=1e-8)
-        #cat(tau, out$root, "\n")
-        # Replace with exact solution 
         vmat[groups[[kk]],kk] <- crossprod(t(ginv(crossprod(D.mats[[kk]]) + diag(tau, dim(D.mats[[kk]])[1]))), crossprod(D.mats[[kk]], y.resid[groups[[kk]]]))
         y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] - crossprod(D.mats[[kk]], vmat[groups[[kk]], kk])
       }
     }
-    #if(jj > 2){
-      if(sum((vmatold - vmat)^2) < 1e-9){
-        #cat("Broken at iteration ", jj,":" "\n")
-        break
-      }
-    #}
+    if (sum((vmatold - vmat)^2) < 1e-9){
+      break
+    }
   }
 
   t0 <- rep(0, length(eta))
-  for(kk in length(groups):1){
+  for (kk in length(groups):1) {
     t0[groups[[kk]]] <- t0[groups[[kk]]] + crossprod(D.mats[[kk]], vmat[groups[[kk]],kk])
   }
   return(list("result" = eta - t0, "vmat" = vmat))
@@ -386,7 +380,7 @@ proxFunction.overlap <- function(eta, lambda, groups, D.input, vmat = NULL){
 outerProx.overlap <- function(y, lambda, gamma, groups, vmat){
   
   b.out <- rep(0, length(y))
-  if(lambda!=0){
+  if (lambda!=0) {
     t0 <- proxFunction.overlap(y, lambda, groups, vmat)
     b.out <- t0$result
     vmat <- t0$vmat
@@ -394,7 +388,7 @@ outerProx.overlap <- function(y, lambda, gamma, groups, vmat){
     b.out <- y
   }
   t0 <- sqrt(sum(b.out^2))
-  if(t0 > gamma){
+  if (t0 > gamma) {
     b.out <- (1 - gamma/t0)*b.out
   } else {
     b.out <- rep(0, length(y))
@@ -405,12 +399,12 @@ outerProx.overlap <- function(y, lambda, gamma, groups, vmat){
 fullProx.overlap <- function(input, lambda, gamma, groups, vmat.full = NULL){
   
   out <- matrix(0, nrow=dim(input)[1], ncol=dim(input)[2])
-  if(is.null(vmat.full)){
+  if (is.null(vmat.full)) {
    vmat.full <- array(0, dim=c(dim(input)[1], dim(input)[2], length(groups))) 
   }
   out[1,] <- input[1,]
-  for(j in 2:(dim(input)[1])){
-    if(sqrt(sum(input[j,]^2)) < gamma){
+  for (j in 2:(dim(input)[1])) {
+    if (sqrt(sum(input[j,]^2)) < gamma) {
       out[j,] <- 0
     } else {
       t0 <- outerProx.overlap(input[j,], lambda, gamma, groups, vmat.full[j,,])
@@ -450,7 +444,7 @@ AccPGD.HierMultinomOverlap <- function(X, Y, groups, beta.init, lambda, gamma, m
   L0 <- dim(Y)[1]/(sqrt(dim(Y)[2])*sum(X^2))
   vmat.full <- NULL
   
-  for(kk in 1:max.iter){
+  for (kk in 1:max.iter) {
     
     search.point <- beta.iter + ((alpha.prev - 1)/(alpha))*(beta.iter - beta.prev)
     temp <- getGradLik(X, Y, search.point)
@@ -458,7 +452,7 @@ AccPGD.HierMultinomOverlap <- function(X, Y, groups, beta.init, lambda, gamma, m
     lik.current <- temp$lik
     linesearch <- TRUE
     
-    while(linesearch){
+    while (linesearch) {
       
       temp.step <- search.point - step.size*temp.grad
       t0 <- fullProx.overlap(temp.step, step.size*lambda, step.size*gamma, groups, vmat.full = vmat.full)
@@ -467,31 +461,27 @@ AccPGD.HierMultinomOverlap <- function(X, Y, groups, beta.init, lambda, gamma, m
       lik.try <- getObj(X, Y, beta.try, groups, lambda = 0, gamma = 0)
       check <- (lik.try <= lik.current + sum(temp.grad*(beta.try - search.point)) + (1/(2*step.size))*sum((beta.try - search.point)^2))
 
-      if(check | step.size == L0){
+      if (check | step.size == L0) {
         linesearch <- FALSE
         beta.prev <- beta.iter
         beta.iter <- beta.try
         alpha.prev <- alpha
         alpha <- (1 + sqrt(1 + 4*alpha.prev^2))/2
-        #lik.current <- lik.try
       } else {
         #cat(check, "\n")
         step.size <- max(step.size/2, L0)
       }
     }
     
-    # cat(step.size, "\n")
-
     obj.vals[kk+1] <- lik.try + evalPen(beta.iter, lambda, gamma, groups)
-    if(kk > 1){
-      if(obj.vals[kk+1] > obj.vals[kk]){
+    if (kk > 1) {
+      if (obj.vals[kk+1] > obj.vals[kk]) {
         beta.iter <- beta.prev
         obj.vals[kk+1] <- obj.vals[kk]
       }
     }
-    # cat(obj.vals[kk+1],"\n")
-    if(kk > 10){
-      if(all(abs((obj.vals[kk:(kk-5)] - obj.vals[(kk+1):(kk-4)])) < tol * abs(obj.vals[1]))){
+    if (kk > 10) {
+      if (all(abs((obj.vals[kk:(kk-5)] - obj.vals[(kk+1):(kk-4)])) < tol * abs(obj.vals[1]))) {
         break
       }
     }
@@ -506,7 +496,7 @@ HierMultinomOverlap.path <- function(X, Y, groups, ngamma = 100, delta = 0.01, l
   K <- dim(Y)[2]
   x.sd.temp <- apply(X, 2, sd)
   Xtrain <- cbind(1, (X - tcrossprod(rep(1, n), colMeans(X)))/(tcrossprod(rep(1, n), x.sd.temp)))
-  if(any(x.sd.temp==0)){
+  if (any(x.sd.temp==0)) {
     Xtrain[,which(x.sd.temp==0)] <- 0
   }
   grad.temp <- crossprod(Xtrain, Y - rep(1, n)%*%t(colMeans(Y))/n)
@@ -518,12 +508,11 @@ HierMultinomOverlap.path <- function(X, Y, groups, ngamma = 100, delta = 0.01, l
   beta.init0[1,] <- log(margPi) 
   gamma.matrix <- matrix(0, nrow=ngamma, ncol=length(lambda.vec))
   beta.array <- array(0, dim=c(p, K, length(lambda.vec), length(gamma.vec)))
-  for(kk in 1:length(lambda.vec)){
+  for (kk in 1:length(lambda.vec)) {
     beta.init <- beta.init0
-    for(jj in 1:length(gamma.vec)){
+    for (jj in 1:length(gamma.vec)) {
       temp <- AccPGD.HierMultinomOverlap(Xtrain, Y, groups, beta.init, lambda = lambda.vec[kk], gamma = gamma.vec[jj], max.iter = max.iter, tol = tol)
-      #cat(sum(temp[-1,] == 0), "\n")
-      if(sum(temp[-1,] == 0) < length(c(temp[-1,]))){
+      if (sum(temp[-1,] == 0) < length(c(temp[-1,]))) {
         gamma.matrix[1,kk] <- gamma.vec[jj-1]
         gamma.vec <- 10^seq(log10(gamma.matrix[1,kk]), log10(delta*gamma.matrix[1,kk]), length=ngamma)
         break
@@ -531,12 +520,9 @@ HierMultinomOverlap.path <- function(X, Y, groups, ngamma = 100, delta = 0.01, l
         beta.init <- temp
       }
     }
-    #cat("# --------", kk,"\n")
   }
 
-
-
-  for(kk in 1:length(lambda.vec)){
+  for (kk in 1:length(lambda.vec)) {
     gamma.matrix[,kk] <- 10^seq(log10(gamma.matrix[1,kk]), log10(delta*gamma.matrix[1,kk]), length=ngamma)
   }
 
@@ -548,24 +534,26 @@ HierMultinomOverlap.path <- function(X, Y, groups, ngamma = 100, delta = 0.01, l
   beta.init0[1,] <- log(margPi) 
   beta.array <- array(0, dim=c(p, K, length(lambda.vec), ngamma))
   val.errs <- matrix(Inf, nrow=length(lambda.vec), ncol=ngamma)
-  for(kk in 1:length(lambda.vec)){
+  for (kk in 1:length(lambda.vec)) {
     beta.init <- beta.init0
-    for(jj in 1:ngamma){
+    for (jj in 1:ngamma) {
       temp <- AccPGD.HierMultinomOverlap(Xtrain, Y, groups, beta.init, lambda = lambda.vec[kk], gamma = gamma.matrix[jj,kk], max.iter = max.iter, tol = tol)
       beta.array[,,kk,jj] <- temp
       val.errs[kk,jj] <- validationLik(X, Xval, Yval, temp)
-      if(jj > 10 & val.errs[kk,jj] < val.errs[kk,1]){
-        if(all(val.errs[kk,(jj):(jj-3)] > val.errs[kk,(jj-1):(jj-4)])){
+      if (jj > 10 & val.errs[kk,jj] < val.errs[kk,1]) {
+        if (all(val.errs[kk,(jj):(jj-3)] > val.errs[kk,(jj-1):(jj-4)])) {
           break
         }
       }
-      if(!quiet){
+      if (!quiet) {
         cat(val.errs[kk,jj], "\n")
       }
       beta.init <- temp
     }
-    if(kk > 3){
-      if(all(val.errs[kk,] > min(val.errs[kk-1,])) & all(val.errs[kk-1,] > min(val.errs[kk-2,])) & all(val.errs[kk-2,] > min(val.errs[kk-3,]))){
+    if (kk > 3) {
+      if (all(val.errs[kk,] > min(val.errs[kk-1,])) & 
+          all(val.errs[kk-1,] > min(val.errs[kk-2,])) & 
+          all(val.errs[kk-2,] > min(val.errs[kk-3,]))) {
         break
       }
     }
