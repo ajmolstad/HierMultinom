@@ -1,0 +1,1 @@
+Results for the nonoverlapping coarse category simulation studies will be found in this directory.
