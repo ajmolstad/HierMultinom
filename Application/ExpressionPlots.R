@@ -5,10 +5,11 @@ library(ggridges)
 # ---------------------------------------------------------
 # get hao_2020_truncated from dropbox link in README
 # ---------------------------------------------------------
-data <- data <- readRDS("/Users/aaron/Dropbox/HierMultinomData/hao_2020_truncated.rds")
+data <- readRDS("/Users/aaron/Dropbox/HierMultinomData/hao_2020_truncated.rds")
 data$cell_type = ifelse(data$cell_type_2 == "Treg", data$cell_type_3, data$cell_type_2)
 removed_labels = "*Proliferating*"
   data = data[, !grepl(removed_labels, data$cell_type)]
+
 
 # get MS4A1 logcounts
 MS4A1  <- SingleCellExperiment::logcounts(data)[which(SingleCellExperiment::logcounts(data)@Dimnames[[1]] == "MS4A1"),]
@@ -68,7 +69,7 @@ CD4 <- c("CD4 CTL", "CD4 Naive", "CD4 TCM", "CD4 TEM", "Treg Memory", "Treg Naiv
 #CoarseY[which(Y%in%NK)] <- "NK"
 CoarseY[which(Y%in%Dendritic)] <- "Dendritic"
 CoarseY[which(Y%in%Bcells)] <- "B cells"
-CoarseY[which(Y%in% CD4)] <- "CD4"  
+CoarseY[which(Y%in%CD4)] <- "CD4"  
 CoarseY[which(Y%in%Monocytes)] <- "Monocytes"
 
 
@@ -83,3 +84,24 @@ p5 <- ggplot(dat5, aes(x=Type, y= XCL2, fill=Type)) + ylab("log(Counts)") + xlab
   geom_violin() + theme_minimal() + theme(legend.position="none") 
 
 plot_grid(p5, p4, rel_widths=c(0.3, 0.7))
+
+
+
+
+
+
+
+
+
+
+# get MS4A1 logcounts
+GZMH  <- SingleCellExperiment::logcounts(data)[which(SingleCellExperiment::logcounts(data)@Dimnames[[1]] == "GZMH"),]
+Y <- as.character(data$cell_type)
+CoarseY <- Y
+CD4 <- c("CD4 CTL", "CD4 Naive", "CD4 TCM", "CD4 TEM", "Treg Memory", "Treg Naive", 
+  "CD8 Naive", "CD8 CTL", "CD8 TCM", "dnT", "gdT", "MAIT")
+
+dat6 <- data.frame("GZMH" = GZMH[which(Y%in%CD4)], "Type" = Y[which(Y%in%CD4)]) 
+p6 <- ggplot(dat6, aes(y=Type, x= GZMH, fill=Type)) + ylab("log(Counts)") + xlab("log(Counts)") + ylab("T cell subtype") +
+  geom_density_ridges() + theme_minimal() + theme(legend.position="none") 
+
