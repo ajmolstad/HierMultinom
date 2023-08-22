@@ -14,6 +14,6 @@ with
 ``` 
 uu <- a
 ```
-where a is the replicate (see t0) you seek to reproduce.  Of course, all file paths should be modified to your local system (as currently, they are setup for the first authors' computing account on HiperGator 3.0). 
+where a is the replicate (see t0) you seek to reproduce.  Of course, all file paths should be modified to your local system (as currently, they are setup for the first author's computing account on HiperGator 3.0). 
 
 For complete result files, which are too large to be stored on GitHub, please email the first author at the email address above. 
