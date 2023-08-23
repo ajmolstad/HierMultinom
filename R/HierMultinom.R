@@ -344,8 +344,7 @@ proxFunction.overlap <- function(eta, lambda, groups, vmat = NULL){
       y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] + crossprod(D.mats[[kk]], vmat[groups[[kk]], kk])
       tmp <- crossprod(D.mats[[kk]], y.resid[groups[[kk]]])
       vmat[groups[[kk]],kk] <- tmp * min(1, lambda/sqrt(sum(tmp^2)))
-              y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] - crossprod(D.mats[[kk]], vmat[groups[[kk]], kk])
-      }
+      y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] - crossprod(D.mats[[kk]], vmat[groups[[kk]], kk])
     }
     if (sum((vmatold - vmat)^2) < 1e-9){
       break
