@@ -1,6 +1,8 @@
 # HierMultinom R Package
 An R package implementing the method proposed in [Multiresolution categorical response regression for interpretable cell type annotation](https://arxiv.org/abs/2208.13857) by Molstad, A. J., and Motwani, K. (2023). Please contact amolstad@umn.edu with any questions or comments. 
 
+Note that the package will be frequently updated. To create the results from the article exactly, please refer to the version of our software from June 10th, 2023. We hope that subsequent updates will improve computing times. 
+
 ### Installation
 HierMultinom can be loaded directly into R through the the `devtools` package:
 ```{r}
