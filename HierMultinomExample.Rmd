@@ -2,7 +2,9 @@
 title: "HierMultinom Example Application"
 author: "Aaron J. Molstad and Keshav Motwani"
 date: "2023-05-01"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +17,7 @@ First, you need to set the path to where the R scripts and RDS files will be. Ca
 dir <- "/Users/amolstad/scRNAseq/Example/"
 ```
 ```{r, echo=FALSE}
-dir <- "/Users/aaron/Dropbox/HierMultinom/SoftwareExample/"
+dir <- "/Users/amolstad/Dropbox/HierMultinom/SoftwareExample/"
 library(Rcpp)
 library(MASS)
 sourceCpp(paste(dir, "Functions/matMult.cpp", sep=""))
@@ -40,6 +42,12 @@ Xfull <- as.matrix(pbmc[["RNA"]]@data[topGenes,])
 ```
 Then, we will divide the data into training, testing, and a validation set.  Note that our function takes the design matrix $X$ as an $n \times p$ matrix where $n$ is the number of samples (here, cells) and $p$ is the number of predictors (here, genes). Similarly, $Y$ needs to be a $n \times K$ matrix where $K$ is the number of response categories (here. cell type labels). Each row of $Y$ must be all zeros except one--in the column corresponding to that particular sample's label.
 ```{r a2, cache=TRUE}
+ptm <- proc.time()
+t2 <- proxFunction.overlap(eta, lambda = 10, groups, vmat = NULL)
+proc.time() - ptm
+
+
+
 set.seed(1)
 train.inds <- sample(1:dim(Xfull)[2], 1750)
 val.inds <- sample(c(1:dim(Xfull)[2])[-train.inds], 750)

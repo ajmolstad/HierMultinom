@@ -317,14 +317,7 @@ HierMultinom.coef <- function(mod.fit, ind1 = NULL, ind2 = NULL){
 
 
 
-
-
-
-
-
-
-
-proxFunction.overlap <- function(eta, lambda, groups, D.input, vmat = NULL){
+proxFunction.overlap <- function(eta, lambda, groups, vmat = NULL){
 
   if (is.null(vmat)) {
     vmat <- matrix(0, length(eta), length(groups))
@@ -344,19 +337,14 @@ proxFunction.overlap <- function(eta, lambda, groups, D.input, vmat = NULL){
     y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] - crossprod(D.mats[[kk]], vmat[groups[[kk]], kk])
   }
 
+
   for (jj in 1:1e4) {
     vmatold <- vmat
     for (kk in length(groups):1) {
       y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] + crossprod(D.mats[[kk]], vmat[groups[[kk]], kk])
-      vmat[groups[[kk]],kk] <- crossprod(ginvs[[kk]], crossprod(D.mats[[kk]], y.resid[groups[[kk]]]))
-      if (sum(vmat[groups[[kk]],kk]^2) < lambda^2) {
-        y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] - crossprod(D.mats[[kk]],vmat[groups[[kk]], kk])
-      } else {
-        w <- crossprod(y.resid[groups[[kk]]], eo[[kk]]$vec[,which(abs(eo[[kk]]$values) > 1e-8)])
-        t0 <- sum(w^2)
-        tau <- sqrt(t0/lambda^2) - 1 
-        vmat[groups[[kk]],kk] <- crossprod(t(ginv(crossprod(D.mats[[kk]]) + diag(tau, dim(D.mats[[kk]])[1]))), crossprod(D.mats[[kk]], y.resid[groups[[kk]]]))
-        y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] - crossprod(D.mats[[kk]], vmat[groups[[kk]], kk])
+      tmp <- crossprod(D.mats[[kk]], y.resid[groups[[kk]]])
+      vmat[groups[[kk]],kk] <- tmp * min(1, lambda/sqrt(sum(tmp^2)))
+              y.resid[groups[[kk]]] <- y.resid[groups[[kk]]] - crossprod(D.mats[[kk]], vmat[groups[[kk]], kk])
       }
     }
     if (sum((vmatold - vmat)^2) < 1e-9){
