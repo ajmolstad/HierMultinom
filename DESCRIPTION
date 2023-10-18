@@ -6,7 +6,7 @@ Author: Aaron J. Molstad <amolstad@umn.edu>
 Maintainer: Aaron J. Molstad <amolstad@umn.edu>
 Description: Implementation of the multiresolution multinomial logistic regression estimator proposed by Molstad, A. J. and Motwani, K. (2023). This method can be used for fitting the multinomial logistic regression estimator when response categories can be coarsened at various resolutions, e.g., in the task of cell type annotation based on single-cell RNA-seq data. 
 License: GPL (>= 2)
-URL: ajmolstad@github.io
+URL: ajmolstad.github.io
 Imports: Rcpp (>= 0.12.1), Matrix, MASS
 LinkingTo: Rcpp, RcppArmadillo
 NeedsCompilation: yes
