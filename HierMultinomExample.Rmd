@@ -3,8 +3,8 @@ title: "HierMultinom Example Application"
 author: "Aaron J. Molstad and Keshav Motwani"
 date: "2023-05-01"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -42,12 +42,6 @@ Xfull <- as.matrix(pbmc[["RNA"]]@data[topGenes,])
 ```
 Then, we will divide the data into training, testing, and a validation set.  Note that our function takes the design matrix $X$ as an $n \times p$ matrix where $n$ is the number of samples (here, cells) and $p$ is the number of predictors (here, genes). Similarly, $Y$ needs to be a $n \times K$ matrix where $K$ is the number of response categories (here. cell type labels). Each row of $Y$ must be all zeros except one--in the column corresponding to that particular sample's label.
 ```{r a2, cache=TRUE}
-ptm <- proc.time()
-t2 <- proxFunction.overlap(eta, lambda = 10, groups, vmat = NULL)
-proc.time() - ptm
-
-
-
 set.seed(1)
 train.inds <- sample(1:dim(Xfull)[2], 1750)
 val.inds <- sample(c(1:dim(Xfull)[2])[-train.inds], 750)
@@ -85,11 +79,22 @@ groups <- list(
 groups <- lapply(groups, function(group) sapply(group, function(x) which(categories == x)))
 ```
 Now we are ready to fit the model using the function $\texttt{HeirMult.Path}$. Note that this function only works when no coarse categories overlap. By definition, an overlap occurs when a fine category is contained in two or more coarse categories. This function fits the model for a grid of candidate tuning parameters. Note that this function will take a few minutes to run (~3 minutes). 
-```{r, cache=TRUE}
+```{r, cache=TRUE, eval=F}
 # install.packages("devtools")
 # library(devtools)
 # devtools::install_github("ajmolstad/HierMultinom")
 library(HierMultinom)
+mod.fit <- HierMultinom.path(X = Xtrain, Y = Ytrain, groups = groups, 
+  	ngamma = 20, delta = 1e-4, tol = 1e-7,
+  	lambda.vec = 10^seq(-5,-1, length=5), 
+  	max.iter = 1e4,
+  	Xval = Xval, Yval = Yval, quiet=FALSE)
+```
+```{r, cache=TRUE, echo=FALSE}
+# install.packages("devtools")
+# library(devtools)
+# devtools::install_github("ajmolstad/HierMultinom")
+#library(HierMultinom)
 mod.fit <- HierMultinom.path(X = Xtrain, Y = Ytrain, groups = groups, 
   	ngamma = 20, delta = 1e-4, tol = 1e-7,
   	lambda.vec = 10^seq(-5,-1, length=5), 
@@ -102,7 +107,7 @@ The arguments are
 \item $\texttt{Y}$: An $n \times K$ matrix of response categories as described above.
 \item $\texttt{groups}$: The list of groups, as described above. 
 \item $\texttt{ngamma}$: Number of candidate $\gamma$ tuning parameter values.
-\item $\texttt{delta}$: The ratio of maximum to minimum candidate $\gamma$ values. Check validation errors: if still decreasing at smallest $\gamma$ value, decrease $\texttt{delta}$ and rerun. 
+\item $\texttt{delta}$: The ratio of minimum to maximum candidate $\gamma$ values (i.e., $\min_k \gamma_k =  \delta \max_k \gamma_k$ where $\gamma_k$ is the $k$th candidate tuning parameters). Check validation errors: if still decreasing at smallest $\gamma$ value, decrease $\texttt{delta}$ and rerun. 
 \item $\texttt{tol}$: Convergence tolerance. The default $10^{-7}$ is stringent. 
 \item $\texttt{lambda.vec}$: Candidate $\lambda$ tuning parameter values. Default is $10^{-3, \dots, 0}$. 
 \item $\texttt{max.iter}$: Maximum number of iterations for accelerated proximal gradient descent algorithm. 
@@ -151,7 +156,7 @@ source(paste(dir, "Functions/HierMultinom.R", sep=""))
 ```
 
 ```{r overlap, cache=TRUE}
-mod.fit.overlap <- HierMultinomOverlap.path(X = Xtrain, Y = Ytrain, groups = groups, 
+mod.fit.overlap <- HierMultinomOverlap.path(X = Xtrain, Y = Ytrain, groups = groups,
   	ngamma = 20, delta = 1e-4, tol = 1e-7,
   	lambda.vec = 10^seq(-5,-1, length=5), 
   	max.iter = 1e4,
