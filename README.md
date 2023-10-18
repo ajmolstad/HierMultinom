@@ -4,7 +4,7 @@ An R package implementing the method proposed in [Multiresolution categorical re
 Note that the package will be frequently updated. To create the results from the article exactly, please refer to the version of our software from June 10th, 2023. We hope that subsequent updates will improve computing times. 
 
 ### Installation
-HierMultinom can be loaded directly into R through the the `devtools` package:
+HierMultinom can be loaded directly into R through the `devtools` package:
 ```{r}
 install.packages("devtools")
 library(devtools)
