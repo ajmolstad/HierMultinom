@@ -16,7 +16,12 @@ HierMultinomOverlap.path(X, Y, groups, ngamma = 100, delta = 0.01,
 \item{groups}{The list of groups, as described in the example on the GitHub page. Note that this function is to be used when groups overlap (though it will still work if they do not). }
 \item{Xval}{An \eqn{n_{\rm validation} \times p} matrix of predictors for validation set.}
 \item{Yval}{An \eqn{n_{\rm validation} \times K} matrix of responses for validation set. }
-For all others, see example on the GitHub page. 
+\item{ngamma}{Number of candidate \eqn{\gamma} tuning parameter values.}
+\item{delta}{The ratio of minimum to maximum candidate \eqn{\gamma} values (i.e., \eqn{\min_k \gamma_k =  \delta \max_k \gamma_k} where \eqn{\gamma_k} is the \eqn{k}th candidate tuning parameters). Check validation errors: if still decreasing at smallest \eqn{\gamma} value, decrease \code{delta} and rerun. }
+\item{tol}{Convergence tolerance. The default \eqn{10^{-7}} is stringent. }
+\item{lambda.vec}{Candidate \eqn{\lambda} tuning parameter values. Default is  \eqn{(10^{-3}, 10^{-2.67}, 10^{-2.33},\dots, 10^{0})}.} 
+\item{max.iter}{Maximum number of iterations for accelerated proximal gradient descent algorithm. }
+\item{quiet}{Should progress be printed? }
 }
 
 \value{
