@@ -22,7 +22,7 @@ Please cite the most recent version of the article mentioned above. As of June 2
       primaryClass={stat.ME}
 }
 ```
-### Usage directions
+### Vignette
 Please visit [this example page](https://ajmolstad.github.io/docs/HierMultinomExample.html) for details on implementation and usage. This example is available above as an RMD file (HierMultinomExample.Rmd). 
 
 ### Simulation study results
