@@ -1,7 +1,7 @@
 \name{HierMultinom.coef}
 \alias{HierMultinom.coef}
-\title{HierMultinom.coef}
-\description{Extract coefficient from fitted model obtained from HierMultinom.path or HierMultinomOverlap.path. }\usage{
+\title{Extract regression coefficients from fitted model object}
+\description{A function used to extract coefficient from fitted model obtained from \code{HierMultinom.path} or \code{HierMultinomOverlap.path{}. }\usage{
 HierMultinom.coef(mod.fit, ind1 = NULL, ind2 = NULL)
 }
 
@@ -13,3 +13,4 @@ HierMultinom.coef(mod.fit, ind1 = NULL, ind2 = NULL)
 \value{
 \item{beta.hat}{The estimate of the regression coefficient matrix on the original scale of the predictors.}
 \item{intercept.hat}{The estimate of the intercept on the original scale of the   predictors.}}
+

@@ -1,6 +1,6 @@
 \name{HierMultinom.predict}
 \alias{HierMultinom.predict}
-\title{HierMultinom.predict}
+\title{Obtain predictions from a fitted model object}
 \description{A function to use a fitted multiresolution multinomial logistic regression model for prediction. }
 \usage{
 HierMultinom.predict(mod.fit, Xtest, ind1 = NULL, ind2 = NULL)

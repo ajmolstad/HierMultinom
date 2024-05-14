@@ -275,7 +275,7 @@ HierMultinom.predict <- function(mod.fit, Xtest, ind1 = NULL, ind2 = NULL){
   if (is.null(ind1)) {
     beta.est <- mod.fit$beta.est
   } else {
-    beta.est <- mod.fit$beta.array[,,,ind1, ind2]
+    beta.est <- mod.fit$beta.array[,,ind1, ind2]
   }
   XtestInput <- cbind(1, (Xtest - rep(1, dim(Xtest)[1])%*%t(mod.fit$X.train.mean))/(rep(1, dim(Xtest)[1])%*%t(mod.fit$X.train.sd)))
   if (any(mod.fit$X.train.sd==0)) {
@@ -293,7 +293,7 @@ HierMultinom.coef <- function(mod.fit, ind1 = NULL, ind2 = NULL){
   if (is.null(ind1)) {
     beta.est <- mod.fit$beta.est
   } else {
-    beta.est <- mod.fit$beta.array[,,,ind1, ind2]
+    beta.est <- mod.fit$beta.array[,,ind1, ind2]
   }
   beta.hat <- beta.est[-1,]/(mod.fit$X.train.sd%*%t(rep(1, dim(beta.est)[2])))
   intercept.hat <- beta.est[1,] - mod.fit$X.train.mean%*%beta.hat
@@ -476,7 +476,9 @@ AccPGD.HierMultinomOverlap <- function(X, Y, groups, beta.init, lambda, gamma, m
   return(beta.iter)
 }
 
-HierMultinomOverlap.path <- function(X, Y, groups, ngamma = 100, delta = 0.01, lambda.vec = 10^seq(-3, 0, length=10), tol = 1e-8, max.iter = 1e4, Xval, Yval, quiet=FALSE){
+HierMultinomOverlap.path <- function(X, Y, groups, ngamma = 100, delta = 0.01, 
+  lambda.vec = 10^seq(-3, 0, length=10), 
+  tol = 1e-8, max.iter = 1e4, Xval, Yval, quiet=FALSE){
   
   n <- dim(X)[1]
   p <- dim(X)[2] + 1
