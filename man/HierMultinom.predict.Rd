@@ -1,10 +1,9 @@
 \name{HierMultinom.predict}
 \alias{HierMultinom.predict}
 \title{Obtain predictions from a fitted model object}
-\description{A function to use a fitted multiresolution multinomial logistic regression model for prediction. }
+\description{A function to use a fitted multiresolution multinomial logistic regression model for prediction.}
 \usage{
 HierMultinom.predict(mod.fit, Xtest, ind1 = NULL, ind2 = NULL)
-
 }
 
 \arguments{
@@ -15,12 +14,11 @@ HierMultinom.predict(mod.fit, Xtest, ind1 = NULL, ind2 = NULL)
 }
 
 \value{
-
 \item{\code{probs}:}{The estimated probabilities for each new sample included in \code{Xtest}.  }
 \item{\code{preds}: }{The predicted class for each new sample included in \code{Xtest}.}
 }
 
-\example{
+\examples{
 # HierMultinom Example
 n <- 500
 p <- 100
@@ -32,10 +30,9 @@ for(jj in 1:p){
   }
 }
 eo <- eigen(SigmaX) 
-SigmaXsqrt <- eo$vec%*%diag(eo$val^.5)%*%t(eo$vec)
-X <- matrix(rnorm(n*p), nrow=n)%*%SigmaXsqrt
-Xval <- matrix(rnorm(n*p), nrow=n)%*%SigmaXsqrt
-Xtest <- matrix(rnorm(1e4*p), nrow=1e4)%*%SigmaXsqrt
+SigmaXsqrt <- eo$vec\%*\%diag(eo$val^.5)\%*\%t(eo$vec)
+X <- matrix(rnorm(n*p), nrow=n)\%*\%SigmaXsqrt
+Xval <- matrix(rnorm(n*p), nrow=n)\%*\%SigmaXsqrt
 groups <- list(
   1:3, 4:6, 7:9, 10:12
 )
@@ -44,7 +41,9 @@ s <- 6
 beta <- matrix(0, nrow=p, K)
 coarse.inds <- sample(1:p, s)
 for(kk in 1:4){
-  beta[coarse.inds, groups[[kk]]] <- rnorm(length(coarse.inds), sd = sqrt(5))%*%t(rep(1, length(groups[[kk]])))
+  tmp0 <- t(rep(1, length(groups[[kk]])))
+  tmp <- rnorm(length(coarse.inds), sd=sqrt(5))\%*\%tmp0
+  beta[coarse.inds, groups[[kk]]] <- tmp
 }
 fine.inds <- sample(c(1:p)[-coarse.inds], 18 - s)
 for(kk in 1:4){
@@ -53,15 +52,15 @@ for(kk in 1:4){
   }
 }
 
-t0 <- exp(X%*%beta)
-probs <- t0/rowSums(t0)%*%t(rep(1, K))
+t0 <- exp(X\%*\%beta)
+probs <- t0/rowSums(t0)\%*\%t(rep(1, K))
 Y <- matrix(0, nrow = n, ncol = K)
 for(jj in 1:n){
   Y[jj,sample(1:K,1, prob = t0[jj,])] <- 1
 }
 
-t0 <- exp(Xval%*%beta)
-probs <- t0/rowSums(t0)%*%t(rep(1, K))
+t0 <- exp(Xval\%*\%beta)
+probs <- t0/rowSums(t0)\%*\%t(rep(1, K))
 Yval <- matrix(0, nrow = n, ncol = K)
 for(jj in 1:n){
   Yval[jj,sample(1:K,1, prob = t0[jj,])] <- 1
