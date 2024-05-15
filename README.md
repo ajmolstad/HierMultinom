@@ -13,17 +13,19 @@ devtools::install_github("ajmolstad/HierMultinom")
 ### Citation instructions
 Please cite the most recent version of the article mentioned above. As of June 2023, this was the following (in bibtex): 
 ```
-@misc{molstad2022multiresolution,
-      title={Multiresolution categorical regression for interpretable cell type annotation}, 
-      author={Aaron J. Molstad and Keshav Motwani},
-      year={2022},
-      eprint={2208.13857},
-      archivePrefix={arXiv},
-      primaryClass={stat.ME}
+@article{molstad2023multiresolution,
+  title={Multiresolution categorical regression for interpretable cell-type annotation},
+  author={Molstad, Aaron J and Motwani, Keshav},
+  journal={Biometrics},
+  volume={79},
+  number={4},
+  pages={3485--3496},
+  year={2023},
+  publisher={Wiley Online Library}
 }
 ```
 ### Vignette
-Please visit [this example page](https://ajmolstad.github.io/docs/HierMultinomExample.html) for details on implementation and usage. This example is available above as an RMD file (HierMultinomExample.Rmd). 
+Please visit [this example page](https://ajmolstad.github.io/docs/HierMultinomExample.html) for details on implementation and usage. 
 
 ### Simulation study results
 The simulation study results can be reproduced using the scripts in the Simulations directory. Please see the README file in this directory for specifics. 
